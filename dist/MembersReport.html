@@ -6,6 +6,7 @@
 <div id="app">
     <btcog-select></btcog-select>
     <btcog-members></btcog-members>
+    <btcog-all-members></btcog-all-members>
     <no-record></no-record>
 </div>
 
@@ -99,7 +100,7 @@
   })
 
   var _mbrData = Vue.component("btcog-members",{
-      template: '<div id="mbrData" v-if="RecordSelected">\
+      template: '<div id="mbrData" v-if="RecordSelected && !allmembers">\
                     <h1>{{selectedMember}}</h1>\
                     <h3>{{taxid}}</h3>\
                     <btcog-tabledata :memberitems="firstrecord" :membercolumns="columns" :first="firstt" :last="!lastt"></btcog-tabledata>\
@@ -194,6 +195,9 @@
           },
           norecords: function(){
               return store.getters.getNoRecords;
+          },
+          allmembers: function(){
+              return store.getters.getAllMembers;
           }
       },
       filters:{
@@ -201,6 +205,111 @@
             return accounting.formatMoney(payload);
           }
       }
+  })
+
+  var _mbrallData = Vue.component("btcog-all-members", {
+    template: '<div id="mbrallData" v-if="allmembers"><div id="mbrData" v-if="RecordSelected">\
+                  <h1>{{selectedMember}}</h1>\
+                  <h3>{{taxid}}</h3>\
+                  <btcog-tabledata :memberitems="firstrecord" :membercolumns="columns" :first="firstt" :last="!lastt"></btcog-tabledata>\
+                  <div v-for="dv in otherrecord">\
+                      <btcog-tabledata :memberitems="dv.Data" :membercolumns="columns" :first="!firstt" :last="!lastt"></btcog-tabledata>\
+                  </div>\
+                  <btcog-tabledata :memberitems="lastrecord" :membercolumns="columns" :first="!firstt" :last="lastt"></btcog-tabledata>\
+                  <b-table :items="firstrecord" :fields="fields">\
+                    <template slot="HEAD_Date" slot-scope="data" >\
+                    </template>\
+                    <template slot="HEAD_Type" slot-scope="data" >\
+                    </template>\
+                    <template slot="HEAD_Amount" slot-scope="data">\
+                    </template>\
+                    <template slot="Date" slot-scope="data">\
+                        <strong>Total for Member - {{selectedMember}}</strong>\
+                    </template>\
+                    <template slot="Type" slot-scope="data">\
+                    </template>\
+                    <template slot="Amount" slot-scope="data">\
+                      <strong>{{data.item.Amount | formatamount}}</strong>\
+                    </template>\
+                  </b-table>\
+              </div></div>',
+    data: function () {
+      return {
+        columns: [{ key: 'Date', label: 'Transaction Date', formatter: 'formatdate' },
+        { key: 'Type', label: 'Transaction Type' },
+        { key: 'Amount', label: 'Amount', formatter: 'getamount' }],
+        fields: ["Date", "Type", { key: "Amount", formatter: 'formatamount' }],
+        firstt: true,
+        lastt: true,
+
+      }
+    },
+    computed: {
+      selectedMember: function () {
+        return store.getters.getSelectedMember;
+      },
+      RecordSelected: function () {
+        return store.getters.getMemberReport;
+      },
+      taxid: function () {
+        return store.getters.getTaxID;
+      },
+      firstrecord: function () {
+        var ary = store.getters.getMemberData;
+        if (ary.length > 0) {
+          this.firstkey = ary[0].Key;
+          return ary[0].Data;
+        }
+        else
+          return [];
+      },
+      lastrecord: function () {
+        var ary = store.getters.getMemberData;
+        if (ary.length > 1) {
+          var ln = ary.length;
+          this.lastkey = ary[ln - 1].Key;
+          return ary[ln - 1].Data;
+        }
+        else
+          return [];
+      },
+      otherrecord: function () {
+        var firstkey = 0;
+        var lastkey = 0;
+        var ary = store.getters.getMemberData;
+        var ln = ary.length;
+        if (ln > 0) {
+          firstkey = ary[0].Key;
+          lastkey = ary[ln - 1].Key;
+          return store.getters.getMemberData.filter(function (item) {
+            return item.Key != firstkey && item.Key != lastkey;
+          })
+        }
+        else
+          return [];
+      },
+      // totalItems: function () {
+      //   var dt = [];
+      //   var wk = {
+      //     Date: new Date(),
+      //     Type: "Type",
+      //     Amount: store.getters.getMemberTotal
+      //   }
+      //   dt.push(wk);
+      //   return dt;
+      // },
+      norecords: function () {
+        return store.getters.getNoRecords;
+      },
+      allmembers: function () {
+        return store.getters.getAllMembers;
+      }
+    },
+    filters: {
+      formatamount: function (payload) {
+        return accounting.formatMoney(payload);
+      }
+    }
   })
 
   var _mrbTable = Vue.component("btcog-tabledata",{

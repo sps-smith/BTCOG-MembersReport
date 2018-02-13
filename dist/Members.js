@@ -15,7 +15,8 @@ var store = new Vuex.Store({
         _taxid: "TAX-ID - 11925 9869 RR 0001",
         _memberdata:[],
         _memberTotal:0,
-        _norecords: false
+        _norecords: false,
+        _allmembersSelected:false
     },
     getters:{
         getMembers: function(state){
@@ -46,16 +47,22 @@ var store = new Vuex.Store({
             return state._selectyr;
         },
         getMemberTotal: function(state){
-            var tot = 0;
-            state._memberdata.forEach(function(item){
-                item.Data.forEach(function(dta){
-                    tot += dta.Amount;
-                })
-            })
-            return tot;
+            if (!state._allmembersSelected)
+            {
+              var tot = 0;
+              state._memberdata.forEach(function(item){
+                  item.Data.forEach(function(dta){
+                      tot += dta.Amount;
+                  })
+              })
+              return tot;
+            }
         },
         getNoRecords: function (state) {
             return state._norecords;
+        },
+        getAllMembers: function(state){
+          return state._allmembersSelected;
         }
     },
     mutations:{
@@ -79,65 +86,156 @@ var store = new Vuex.Store({
         },
         setNoRecords: function(state, payload){
             state._norecords = payload;
+        },
+        setAllMembers: function(state, payload){
+          state._allmembersSelected = payload;
         }
     },
     actions: {
         queryMemberData: function(context){
             if (context.state._selectyr != "" & context.state._selectmbr != ""){
-              axios.get(_spPageContextInfo.webServerRelativeUrl + "/_api/web/lists/getbytitle('Revenue Transactions')/items?$select=Member/Title,TransactionType/Title,TransactionDate,Amount&$filter=TransactionDate ge datetime'" + getFinanceStartDate(context.state._selectyr) + "' and TransactionDate le datetime'" + getFinanceEndDate(context.state._selectyr) + "' and Member/Title eq '" + fixedEncodeURIComponent(context.state._selectmbr) + "'&$expand=TransactionType/Id,Member/Id&$orderby=TransactionDate", {
-                  headers: { "accept": "application/json;odata=verbose" }
-              })
-              .then(function(response){
-                  var data = [], printrecord = true;
-                  context.commit("setNoRecords", false);
-                  response.data.d.results.forEach(function(element){
-                      var dt = data.filter(function(item){
-                        return item.Key == getMonthfromdte(element.TransactionDate);
-                      })
-                      if (dt.length == 0){
-                          mbr = {
-                            Key: getMonthfromdte(element.TransactionDate),
-                            Data:[
-                              {
-                                Date: element.TransactionDate,
-                                Type: element.TransactionType.Title,
-                                Amount: element.Amount
-                              }
-                            ]
+              if (context.state._selectmbr != "All Members")
+              {
+                context.commit("setAllMembers", false);
+                axios.get(_spPageContextInfo.webServerRelativeUrl + "/_api/web/lists/getbytitle('Revenue Transactions')/items?$select=Member/Title,TransactionType/Title,TransactionDate,Amount&$filter=TransactionDate ge datetime'" + getFinanceStartDate(context.state._selectyr) + "' and TransactionDate le datetime'" + getFinanceEndDate(context.state._selectyr) + "' and Member/Title eq '" + fixedEncodeURIComponent(context.state._selectmbr) + "'&$expand=TransactionType/Id,Member/Id&$orderby=TransactionDate", {
+                    headers: { "accept": "application/json;odata=verbose" }
+                })
+                .then(function(response){
+                    var data = [], printrecord = true;
+                    context.commit("setNoRecords", false);
+                    response.data.d.results.forEach(function(element){
+                        var dt = data.filter(function(item){
+                          return item.Key == getMonthfromdte(element.TransactionDate);
+                        })
+                        if (dt.length == 0){
+                            var mbr = {
+                              Key: getMonthfromdte(element.TransactionDate),
+                              Data:[
+                                {
+                                  Date: element.TransactionDate,
+                                  Type: element.TransactionType.Title,
+                                  Amount: element.Amount
+                                }
+                              ]
+                            }
+                            data.push(mbr);
+                        }
+                        else
+                        {
+                            $.each(data, function(idx, item){
+                                if (item.Key == dt[0].Key)
+                                {
+                                    var mbr = {
+                                      Date: element.TransactionDate,
+                                      Type: element.TransactionType.Title,
+                                      Amount: element.Amount
+                                    }
+                                    item.Data.push(mbr);
+                                    return false;
+                                }
+                            })
+                        }
+                    });
+                    if (data.length > 0)
+                    {
+                      context.commit("setMemberData", data);
+                      context.commit("setMemberReport", true);
+                      printrecord = false;
+                    }
+                    else
+                    {
+                      context.commit("setMemberReport", false);
+                      context.commit("setMemberData", []);
+                      context.commit("setNoRecords", true);
+                    }
+
+                    context.commit("setPrintDisabled", printrecord);
+                })
+              }
+              else
+              {
+                  context.commit("setAllMembers", true);
+                  axios.get(_spPageContextInfo.webServerRelativeUrl + "/_api/web/lists/getbytitle('Revenue Transactions')/items?$top=5000&$select=Member/Title,MemberId,TransactionType/Title,TransactionDate,Amount&$filter=TransactionDate ge datetime'" + getFinanceStartDate(context.state._selectyr) + "' and TransactionDate le datetime'" + getFinanceEndDate(context.state._selectyr) + "' and Member/Id gt 0&$expand=TransactionType/Id,Member/Id&$orderby=Member/Title,TransactionDate", {
+                      headers: { "accept": "application/json;odata=verbose" }
+                  })
+                  .then(function(response){
+                      var data = [], printrecord = true;
+                      context.commit("setNoRecords", false);
+                      response.data.d.results.forEach(function (element) {
+                        var dt = data.filter(function (item) {
+                          return item.Member == element.Member.Title;
+                        })
+                        if (dt.length == 0) {
+                          var mbr = {
+                            Member: element.Member.Title,
+                            Months:[{
+                              Key: getMonthfromdte(element.TransactionDate),
+                              Data: [
+                                {
+                                  Date: element.TransactionDate,
+                                  Type: element.TransactionType.Title,
+                                  Amount: element.Amount
+                                }
+                              ]
+                            }]
                           }
                           data.push(mbr);
-                      }
-                      else
-                      {
-                          $.each(data, function(idx, item){
-                              if (item.Key == dt[0].Key)
+                        }
+                        else {
+                          $.each(data, function (idx, item) {
+                            if (item.Member == dt[0].Member) {
+                              var mdt = item.Months.filter(function (dta) {
+                                return dta.Key == getMonthfromdte(element.TransactionDate);
+                              })
+                              if (mdt.length == 0)
                               {
-                                  mbr = {
-                                    Date: element.TransactionDate,
-                                    Type: element.TransactionType.Title,
-                                    Amount: element.Amount
-                                  }
-                                  item.Data.push(mbr);
-                                  return false;
+                                var mbr = {
+                                  Key: getMonthfromdte(element.TransactionDate),
+                                  Data: [
+                                    {
+                                      Date: element.TransactionDate,
+                                      Type: element.TransactionType.Title,
+                                      Amount: element.Amount
+                                    }
+                                  ]
+                                }
+                                item.Months.push(mbr);
                               }
-                          })
-                      }
-                  });
-                  if (data.length > 0)
-                  {
-                    context.commit("setMemberData", data);
-                    context.commit("setMemberReport", true);
-                    printrecord = false;
-                  }
-                  else
-                  {
-                    context.commit("setMemberReport", false);
-                    context.commit("setMemberData", []);
-                    context.commit("setNoRecords", true);
-                  }
+                              else
+                              {
+                                $.each(item.Months, function(dx, mta){
+                                  if (mta.Key == getMonthfromdte(element.TransactionDate))
+                                  {
+                                    var mbr = {
+                                      Date: element.TransactionDate,
+                                      Type: element.TransactionType.Title,
+                                      Amount: element.Amount
+                                    }
+                                    mta.Data.push(mbr);
+                                    return false;
+                                  }
+                                })
 
-                  context.commit("setPrintDisabled", printrecord);
-              })
+                              }
+                              return false;
+                            }
+                          })
+                        }
+                      });
+                      if (data.length > 0) {
+                        context.commit("setMemberData", data);
+                        context.commit("setMemberReport", true);
+                        printrecord = false;
+                      }
+                      else {
+                        context.commit("setMemberReport", false);
+                        context.commit("setMemberData", []);
+                        context.commit("setNoRecords", true);
+                      }
+
+                      context.commit("setPrintDisabled", printrecord);
+                  })
+              }
             }
         }
     }
