@@ -1,0 +1,10 @@
+{
+  "generator-sppp": {
+    "app.name": "btcog-members-report",
+    "sppp.version": "2.1.9",
+    "app.description": "",
+    "app.author": "",
+    "conf.spFolder": "siteassets/MembersReports",
+    "conf.distFolder": "./dist"
+  }
+}

@@ -1,0 +1,33 @@
+div#app
+{
+    max-width: 1000px;
+}
+div#mbrSelection
+{
+    margin-top:20px;
+}
+div#mbrData
+{
+    page-break-after: always;
+}
+div#tblData tbody tr td:nth-child(3),div#tblData thead tr th:nth-child(3),div#tblData tfoot tr th:nth-child(3), .b-table tbody tr td:nth-child(3)
+{
+    text-align: right;
+}
+
+div#tblData thead tr th:nth-child(1), div#tblData thead tr th:nth-child(2)
+{
+    width: 400px;
+}
+.table td, .table th
+{
+    padding:0;
+    border-top:none;
+}
+
+.table {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 1rem;
+    background-color: transparent;
+}
