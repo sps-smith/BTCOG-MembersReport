@@ -16,7 +16,8 @@ var store = new Vuex.Store({
         _memberdata:[],
         _memberTotal:0,
         _norecords: false,
-        _allmembersSelected:false
+        _allmembersSelected:false,
+        _loading: false
     },
     getters:{
         getMembers: function(state){
@@ -62,7 +63,10 @@ var store = new Vuex.Store({
             return state._norecords;
         },
         getAllMembers: function(state){
-          return state._allmembersSelected;
+            return state._allmembersSelected;
+        },
+        getLoading: function(state){
+            return state._loading;
         }
     },
     mutations:{
@@ -88,7 +92,10 @@ var store = new Vuex.Store({
             state._norecords = payload;
         },
         setAllMembers: function(state, payload){
-          state._allmembersSelected = payload;
+            state._allmembersSelected = payload;
+        },
+        setLoading: function(state, payload){
+            state._loading = payload;
         }
     },
     actions: {
@@ -234,6 +241,7 @@ var store = new Vuex.Store({
                       }
 
                       context.commit("setPrintDisabled", printrecord);
+                      context.commit("setLoading", false);
                   })
               }
             }

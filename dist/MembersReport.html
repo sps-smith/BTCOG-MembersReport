@@ -30,12 +30,13 @@
                     </select>\
                     <b-button size="sm" variant="success" @click="getMembersReport" :disabled="isdisabled">Generate members report</b-button>\
                     <b-button size="sm" variant="primary" @click="printMembersReport" :disabled="printdisabled">Print report</b-button>\
+                     <div v-show="loading"><img src="../siteassets/MembersReports/please_wait.gif" /></div>\
                 </div>',
       data: function(){
         return{
             year:"",
             member:"",
-            isdisabled: true
+            isdisabled: true,
         }
       },
       computed: {
@@ -47,13 +48,25 @@
           },
           printdisabled: function(){
               return store.getters.getPrintDisabled;
+          },
+          loading: function(){
+              return store.getters.getLoading;
           }
       },
       methods:{
           getMembersReport: function(){
+              store.commit("setMemberData", []);
               store.commit("setSelectedMember", this.member);
               store.commit("setSelectedYear", this.year);
-              store.dispatch('queryMemberData')
+              if (this.member == "All Members")
+              {
+                store.commit("setLoading", true);
+              }
+              else
+              {
+                store.commit("setLoading", false);
+              }
+              store.dispatch('queryMemberData');
           },
           printMembersReport: function () {
                 var mywindow = window.open('', 'Data', 'height=800');
@@ -81,6 +94,7 @@
             store.commit("setMemberReport",false);
             store.commit("setAllMembers",false);
             store.commit("setNoRecords",false);
+            store.commit("setLoading", false);
           },
           member: function () {
             if (this.year != "" && this.member != "")
@@ -90,6 +104,7 @@
             store.commit("setMemberReport",false);
             store.commit("setAllMembers",false);
             store.commit("setNoRecords",false);
+            store.commit("setLoading", false);
           }
       }
   })
