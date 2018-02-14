@@ -1,3 +1,9 @@
+body{
+    font-size: .9rem;
+}
+*, ::after, ::before {
+    box-sizing: content-box;
+}
 div#app
 {
     max-width: 1000px;
@@ -6,9 +12,9 @@ div#mbrSelection
 {
     margin-top:20px;
 }
-div#mbrData
+div.mbrData h1
 {
-    page-break-after: always;
+    page-break-before: always;
 }
 div#tblData tbody tr td:nth-child(3),div#tblData thead tr th:nth-child(3),div#tblData tfoot tr th:nth-child(3), .b-table tbody tr td:nth-child(3)
 {
@@ -30,4 +36,10 @@ div#tblData thead tr th:nth-child(1), div#tblData thead tr th:nth-child(2)
     max-width: 100%;
     margin-bottom: 1rem;
     background-color: transparent;
+}
+
+.ms-core-listMenu-verticalBox > .ms-core-listMenu-item, .ms-core-listMenu-verticalBox li.static > .ms-core-listMenu-item
+{
+    line-height: 1;
+    font-size: 13px;
 }

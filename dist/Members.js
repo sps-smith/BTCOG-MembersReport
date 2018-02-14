@@ -47,7 +47,7 @@ var store = new Vuex.Store({
             return state._selectyr;
         },
         getMemberTotal: function(state){
-            if (!state._allmembersSelected)
+            if (!state._allmembersSelected && state._memberreport)
             {
               var tot = 0;
               state._memberdata.forEach(function(item){
@@ -263,4 +263,14 @@ function fixedEncodeURIComponent(src) {
     });
   }
   return src;
+}
+
+function getUserTotal(ary){
+    var tot = 0;
+    ary.forEach(function(item){
+        item.Data.forEach(function(dta){
+            tot += dta.Amount;
+        })
+    })
+    return tot;
 }
