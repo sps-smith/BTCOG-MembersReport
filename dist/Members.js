@@ -4,13 +4,13 @@
 
 var store = new Vuex.Store({
     state: {
-        _years: ['',2014, 2015, 2016, 2017, 2018, 2019, 2020],
+        _years: ['',2020, 2021, 2022, 2023, 2024, 2025, 2026],
         _months: ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
         _allmembers:["","All Members"],
         _members:[],
         _printdisabled: true,
         _selectmbr:"",
-        _selectyr: "",
+        _selectyr: 0,
         _memberreport: false,
         _taxid: "TAX-ID - 11925 9869 RR 0001",
         _memberdata:[],
@@ -24,7 +24,13 @@ var store = new Vuex.Store({
             return state._allmembers.concat(state._members);
         },
         getYears: function(state){
-            return state._years;
+            var dt = new Date().getFullYear();
+            var data  = [];
+            data.push(dt);
+            for(var x=1; x <=4;x++){
+                data.push(dt - x);
+            }
+            return data;
         },
         getPrintDisabled: function(state){
             return state._printdisabled;

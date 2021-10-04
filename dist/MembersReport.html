@@ -1,27 +1,39 @@
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css" rel="stylesheet" />
-<link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap@next/dist/css/bootstrap.min.css" />
-<link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css" />
-<link href="../siteassets/MembersReports/members.css" rel="stylesheet">
+<link
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css"
+  rel="stylesheet"
+/>
+<link
+  type="text/css"
+  rel="stylesheet"
+  href="//unpkg.com/bootstrap@next/dist/css/bootstrap.min.css"
+/>
+<link
+  type="text/css"
+  rel="stylesheet"
+  href="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css"
+/>
+<link href="../siteassets/MembersReports/members.css" rel="stylesheet" />
 
 <div id="app">
-    <btcog-select></btcog-select>
-    <btcog-members></btcog-members>
-    <btcog-all-members></btcog-all-members>
-    <no-record></no-record>
+  <btcog-select></btcog-select>
+  <btcog-members></btcog-members>
+  <btcog-all-members></btcog-all-members>
+  <no-record></no-record>
 </div>
 
 <script src="http://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/accounting.js/0.4.1/accounting.min.js"></script>
-<script src='https://cdn.polyfill.io/v2/polyfill.min.js'></script>
-<script src="https://unpkg.com/vue/dist/vue.min.js"></script>
+<script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
+<script src="https://unpkg.com/vue/dist/vue.js"></script>
 <script src="https://unpkg.com/vuex"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.17.1/axios.min.js"></script>
-<script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
-<script src="../siteassets/MembersReports/members.js"></script>
+<script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
+<script src="../siteassets/MembersReports/members.js?v=1.1"></script>
 
 <script>
-  var _selection = Vue.component("btcog-select",{
-      template: '<div id="mbrSelection">\
+  var _selection = Vue.component("btcog-select", {
+    template:
+      '<div id="mbrSelection">\
                     <span class="lbl">Select year: </span><select v-model="year">\
                       <option v-for="yr in _years" :key="yr" :value="yr">{{yr}}</option>\
                     </select>\
@@ -32,203 +44,196 @@
                     <b-button size="sm" variant="primary" @click="printMembersReport" :disabled="printdisabled">Print report</b-button>\
                      <div v-show="loading"><img src="../siteassets/MembersReports/please_wait.gif" /></div>\
                 </div>',
-      data: function(){
-        return{
-            year:"",
-            member:"",
-            isdisabled: true,
+    data: function () {
+      return {
+        year: 0,
+        member: "",
+        isdisabled: true,
+      };
+    },
+    computed: {
+      _years: function () {
+        return store.getters.getYears;
+      },
+      _members: function () {
+        return store.getters.getMembers;
+      },
+      printdisabled: function () {
+        return store.getters.getPrintDisabled;
+      },
+      loading: function () {
+        return store.getters.getLoading;
+      },
+    },
+    methods: {
+      getMembersReport: function () {
+        store.commit("setMemberData", []);
+        store.commit("setSelectedMember", this.member);
+        store.commit("setSelectedYear", this.year);
+        if (this.member == "All Members") {
+          store.commit("setLoading", true);
+        } else {
+          store.commit("setLoading", false);
         }
+        store.dispatch("queryMemberData");
       },
-      computed: {
-          _years: function(){
-              return store.getters.getYears;
-          },
-          _members: function(){
-              return store.getters.getMembers;
-          },
-          printdisabled: function(){
-              return store.getters.getPrintDisabled;
-          },
-          loading: function(){
-              return store.getters.getLoading;
-          }
-      },
-      methods:{
-          getMembersReport: function(){
-              store.commit("setMemberData", []);
-              store.commit("setSelectedMember", this.member);
-              store.commit("setSelectedYear", this.year);
-              if (this.member == "All Members")
-              {
-                store.commit("setLoading", true);
-              }
-              else
-              {
-                store.commit("setLoading", false);
-              }
-              store.dispatch('queryMemberData');
-          },
-          printMembersReport: function () {
-                var mywindow = window.open('', 'Data', 'height=800');
-                mywindow.document.write('<html><head><title></title>');
-                mywindow.document.write('<style type="text/css">table {width:100%;border:1px solid lightgrey;} div#tblData thead tr th:nth-child(1), div#tblData thead tr th:nth-child(2) {width: 400px;} div#tblData tbody tr td:nth-child(3), div#tblData thead tr th:nth-child(3),div#tblData tfoot tr th:nth-child(3), .b-table tbody tr td:nth-child(3){text-align: right;} div#tblData thead tr th:nth-child(1), div#tblData thead tr th:nth-child(2), div#tblData tfoot tr th:nth-child(1) {text-align: left;} div.mbrData { page-break-after:always;}</style>');
-                mywindow.document.write('</head><body >');
-                if ($("div.mbrData").length == 1)
-                    mywindow.document.write($("div.mbrData").html());
-                else
-                    mywindow.document.write($("div#mbrallData").html());
-                mywindow.document.write('</body></html>');
+      printMembersReport: function () {
+        var mywindow = window.open("", "Data", "height=800");
+        mywindow.document.write("<html><head><title></title>");
+        mywindow.document.write(
+          '<style type="text/css">table {width:100%;border:1px solid lightgrey;} div#tblData thead tr th:nth-child(1), div#tblData thead tr th:nth-child(2) {width: 400px;} div#tblData tbody tr td:nth-child(3), div#tblData thead tr th:nth-child(3),div#tblData tfoot tr th:nth-child(3), .b-table tbody tr td:nth-child(3){text-align: right;} div#tblData thead tr th:nth-child(1), div#tblData thead tr th:nth-child(2), div#tblData tfoot tr th:nth-child(1) {text-align: left;} div.mbrData { page-break-after:always;}</style>'
+        );
+        mywindow.document.write("</head><body >");
+        if ($("div.mbrData").length == 1)
+          mywindow.document.write($("div.mbrData").html());
+        else mywindow.document.write($("div#mbrallData").html());
+        mywindow.document.write("</body></html>");
 
-                mywindow.document.close();
-                mywindow.focus();
-                mywindow.print();
-                mywindow.close();
-          }
+        mywindow.document.close();
+        mywindow.focus();
+        mywindow.print();
+        mywindow.close();
       },
-      watch: {
-          year: function(){
-              if (this.year != "" && this.member != "")
-                this.isdisabled = false;
-              else
-                this.isdisabled = true;
-            store.commit("setMemberReport",false);
-            store.commit("setAllMembers",false);
-            store.commit("setNoRecords",false);
-            store.commit("setLoading", false);
-          },
-          member: function () {
-            if (this.year != "" && this.member != "")
-              this.isdisabled = false;
-            else
-              this.isdisabled = true;
-            store.commit("setMemberReport",false);
-            store.commit("setAllMembers",false);
-            store.commit("setNoRecords",false);
-            store.commit("setLoading", false);
-          }
-      }
-  })
+    },
+    watch: {
+      year: function () {
+        if (this.year > 0 && this.member != "") this.isdisabled = false;
+        else this.isdisabled = true;
+        store.commit("setMemberReport", false);
+        store.commit("setAllMembers", false);
+        store.commit("setNoRecords", false);
+        store.commit("setLoading", false);
+      },
+      member: function () {
+        if (this.year > 0 && this.member != "") this.isdisabled = false;
+        else this.isdisabled = true;
+        store.commit("setMemberReport", false);
+        store.commit("setAllMembers", false);
+        store.commit("setNoRecords", false);
+        store.commit("setLoading", false);
+      },
+    },
+  });
 
-  var _norec = Vue.component("no-record",{
-      template:'<div id="dvNorecords" v-if="norecord">\
+  var _norec = Vue.component("no-record", {
+    template:
+      '<div id="dvNorecords" v-if="norecord">\
                   <h3>No data found for member - {{selectedMember}}</h3>\
                 </div>',
-      computed:{
-        norecord: function(){
-            return store.getters.getNoRecords;
-        },
-        selectedMember: function () {
-            return store.getters.getSelectedMember;
-        },
-      }
-  })
+    computed: {
+      norecord: function () {
+        return store.getters.getNoRecords;
+      },
+      selectedMember: function () {
+        return store.getters.getSelectedMember;
+      },
+    },
+  });
 
-  var _mbrData = Vue.component("btcog-members",{
-      template: '<div class="mbrData" v-if="RecordSelected && !allmembers">\
+  var _mbrData = Vue.component("btcog-members", {
+    template:
+      '<div class="mbrData" v-if="RecordSelected && !allmembers">\
                     <h1>{{selectedMember}}</h1>\
                     <h3>{{taxid}}</h3>\
                     <btcog-tabledata :memberitems="firstrecord" :membercolumns="columns" :first="firstt" :last="!lastt"></btcog-tabledata>\
                     <btcog-tabledata v-for="(dv, idx) in otherrecord" :memberitems="dv.Data" :membercolumns="columns" :first="!firstt" :last="!lastt" :key="idx"></btcog-tabledata>\
                     <btcog-tabledata v-if="lastrecord.length > 0" :memberitems="lastrecord" :membercolumns="columns" :first="!firstt" :last="lastt"></btcog-tabledata>\
                     <b-table :items="totalItems" :fields="fields">\
-                      <template slot="HEAD_Date" slot-scope="data" >\
+                      <template v-slot:head(Date)="data" >\
+                        <span></span>\
                       </template>\
-                      <template slot="HEAD_Type" slot-scope="data" >\
+                      <template v-slot:head(Type)="data" >\
+                        <span></span>\
                       </template>\
-                      <template slot="HEAD_Amount" slot-scope="data">\
+                      <template v-slot:head(Amount)="data">\
+                        <span></span>\
                       </template>\
-                      <template slot="Date" slot-scope="data">\
+                      <template v-slot:cell(Date)="data">\
                           <strong>Total for Member - {{selectedMember}}</strong>\
                       </template>\
-                      <template slot="Type" slot-scope="data">\
+                      <template v-slot:cell(Type)="data">\
+                        <span></span>\
                       </template>\
-                      <template slot="Amount" slot-scope="data">\
-                        <strong>{{data.item.Amount | formatamount}}</strong>\
+                      <template v-slot:cell(Amount)="data">\
+                        <strong>{{data.value | formatamount}}</strong>\
                       </template>\
                     </b-table>\
                 </div>',
-      data: function(){
-          return{
-              columns:[{ key: 'Date', label: 'Transaction Date', formatter: 'formatdate'},
-                        {key: 'Type', label: 'Transaction Type'},
-                        {key: 'Amount', label: 'Amount', formatter: 'getamount'}],
-              fields: ["Date", "Type",{ key:"Amount",formatter: 'formatamount'}],
-              firstt: true,
-              lastt: true,
-
-          }
+    data: function () {
+      return {
+        columns: [
+          { key: "Date", label: "Transaction Date", formatter: "formatdate" },
+          { key: "Type", label: "Transaction Type" },
+          { key: "Amount", label: "Amount", formatter: "getamount" },
+        ],
+        fields: ["Date", "Type", { key: "Amount", formatter: "formatamount" }],
+        firstt: true,
+        lastt: true,
+      };
+    },
+    computed: {
+      selectedMember: function () {
+        return store.getters.getSelectedMember;
       },
-      computed:{
-          selectedMember: function(){
-              return store.getters.getSelectedMember;
-          },
-          RecordSelected: function(){
-              return store.getters.getMemberReport;
-          },
-          taxid: function(){
-              return store.getters.getTaxID;
-          },
-          firstrecord: function(){
-              var ary = store.getters.getMemberData;
-              if (ary.length > 0)
-              {
-                return ary[0].Data;
-              }
-              else
-                return [];
-          },
-          lastrecord: function(){
-              var ary = store.getters.getMemberData;
-              if (ary.length > 1)
-              {
-                var ln = ary.length;
-                return ary[ln - 1].Data;
-              }
-              else
-                return [];
-          },
-          otherrecord: function(){
-              var firstkey = 0;
-              var lastkey = 0;
-              var ary = store.getters.getMemberData;
-              var ln = ary.length;
-              if (ln > 2)
-              {
-                firstkey = ary[0].Key;
-                lastkey = ary[ln - 1].Key;
-                return store.getters.getMemberData.filter(function(item){
-                    return item.Key != firstkey && item.Key != lastkey;
-                })
-              }
-              else
-                return [];
-          },
-          totalItems: function(){
-              var dt = [];
-              var wk = {
-                  Date: new Date(),
-                  Type: "Type",
-                  Amount: store.getters.getMemberTotal
-              }
-              dt.push(wk);
-              return dt;
-          },
-          norecords: function(){
-              return store.getters.getNoRecords;
-          },
-          allmembers: function(){
-              return store.getters.getAllMembers;
-          }
+      RecordSelected: function () {
+        return store.getters.getMemberReport;
       },
-      filters:{
-          formatamount: function (payload) {
-            return accounting.formatMoney(payload);
-          }
-      }
-  })
+      taxid: function () {
+        return store.getters.getTaxID;
+      },
+      firstrecord: function () {
+        var ary = store.getters.getMemberData;
+        if (ary.length > 0) {
+          return ary[0].Data;
+        } else return [];
+      },
+      lastrecord: function () {
+        var ary = store.getters.getMemberData;
+        if (ary.length > 1) {
+          var ln = ary.length;
+          return ary[ln - 1].Data;
+        } else return [];
+      },
+      otherrecord: function () {
+        var firstkey = 0;
+        var lastkey = 0;
+        var ary = store.getters.getMemberData;
+        var ln = ary.length;
+        if (ln > 2) {
+          firstkey = ary[0].Key;
+          lastkey = ary[ln - 1].Key;
+          return store.getters.getMemberData.filter(function (item) {
+            return item.Key != firstkey && item.Key != lastkey;
+          });
+        } else return [];
+      },
+      totalItems: function () {
+        var dt = [];
+        var wk = {
+          Date: new Date(),
+          Type: "Type",
+          Amount: store.getters.getMemberTotal,
+        };
+        dt.push(wk);
+        return dt;
+      },
+      norecords: function () {
+        return store.getters.getNoRecords;
+      },
+      allmembers: function () {
+        return store.getters.getAllMembers;
+      },
+    },
+    filters: {
+      formatamount: function (payload) {
+        return accounting.formatMoney(payload);
+      },
+    },
+  });
 
   var _mbrallData = Vue.component("btcog-all-members", {
-    template: '<div id="mbrallData" v-if="allmembers">\
+    template:
+      '<div id="mbrallData" v-if="allmembers">\
                 <div class="mbrData" v-for="memb in memberdata" :key="memb.Member">\
                   <h1>{{memb.Member}}</h1>\
                   <h3>{{taxid}}</h3>\
@@ -236,33 +241,38 @@
                     <btcog-tabledata v-for="(dv, idx) in otherrecord(memb.Months)" :memberitems="dv.Data" :membercolumns="columns" :first="!firstt" :last="!lastt" :key="idx"></btcog-tabledata>\
                   <btcog-tabledata v-if="lastrecord(memb.Months).length > 0" :memberitems="lastrecord(memb.Months)" :membercolumns="columns" :first="!firstt" :last="lastt"></btcog-tabledata>\
                   <b-table :items="totalItems(memb.Months)" :fields="fields">\
-                    <template slot="HEAD_Date" slot-scope="data" >\
-                    </template>\
-                    <template slot="HEAD_Type" slot-scope="data" >\
-                    </template>\
-                    <template slot="HEAD_Amount" slot-scope="data">\
-                    </template>\
-                    <template slot="Date" slot-scope="data">\
+                    <template v-slot:head(Date)="data" >\
+                        <span></span>\
+                      </template>\
+                      <template v-slot:head(Type)="data" >\
+                        <span></span>\
+                      </template>\
+                      <template v-slot:head(Amount)="data">\
+                        <span></span>\
+                      </template>\
+                    <template v-slot:cell(Date)="data">\
                         <strong>Total for Member - {{memb.Member}}</strong>\
                     </template>\
-                    <template slot="Type" slot-scope="data">\
+                    <template v-slot:cell(Type)="data">\
+                        <span></span>\
                     </template>\
-                    <template slot="Amount" slot-scope="data">\
-                      <strong>{{data.item.Amount | formatamount}}</strong>\
+                    <template v-slot:cell(Amount)="data">\
+                      <strong>{{data.value | formatamount}}</strong>\
                     </template>\
                   </b-table>\
                 </div>\
             </div>',
     data: function () {
       return {
-        columns: [{ key: 'Date', label: 'Transaction Date', formatter: 'formatdate' },
-        { key: 'Type', label: 'Transaction Type' },
-        { key: 'Amount', label: 'Amount', formatter: 'getamount' }],
-        fields: ["Date", "Type", { key: "Amount", formatter: 'formatamount' }],
+        columns: [
+          { key: "Date", label: "Transaction Date", formatter: "formatdate" },
+          { key: "Type", label: "Transaction Type" },
+          { key: "Amount", label: "Amount", formatter: "getamount" },
+        ],
+        fields: ["Date", "Type", { key: "Amount", formatter: "formatamount" }],
         firstt: true,
         lastt: true,
-
-      }
+      };
     },
     computed: {
       memberdata: function () {
@@ -279,121 +289,119 @@
       },
       allmembers: function () {
         return store.getters.getAllMembers;
-      }
+      },
     },
     filters: {
       formatamount: function (payload) {
         return accounting.formatMoney(payload);
-      }
+      },
     },
-    methods:{
-        otherrecord: function (payload) {
-            var firstkey = 0;
-            var lastkey = 0;
-            var ln = payload.length;
-            if (ln > 2) {
-                firstkey = payload[0].Key;
-                lastkey = payload[ln - 1].Key;
-                return payload.filter(function (item) {
-                    return item.Key != firstkey && item.Key != lastkey;
-                })
-            }
-            else
-                return [];
-        },
-        lastrecord: function (payload) {
-            if (payload.length > 1) {
-                var ln = payload.length;
-                return payload[ln - 1].Data;
-            }
-            else
-                return [];
-        },
-        totalItems: function (payload) {
-            var dt = [];
-            var wk = {
-                Date: new Date(),
-                Type: "Type",
-                Amount: getUserTotal(payload)
-            }
-            dt.push(wk);
-            return dt;
-        },
-    }
-  })
+    methods: {
+      otherrecord: function (payload) {
+        var firstkey = 0;
+        var lastkey = 0;
+        var ln = payload.length;
+        if (ln > 2) {
+          firstkey = payload[0].Key;
+          lastkey = payload[ln - 1].Key;
+          return payload.filter(function (item) {
+            return item.Key != firstkey && item.Key != lastkey;
+          });
+        } else return [];
+      },
+      lastrecord: function (payload) {
+        if (payload.length > 1) {
+          var ln = payload.length;
+          return payload[ln - 1].Data;
+        } else return [];
+      },
+      totalItems: function (payload) {
+        var dt = [];
+        var wk = {
+          Date: new Date(),
+          Type: "Type",
+          Amount: getUserTotal(payload),
+        };
+        dt.push(wk);
+        return dt;
+      },
+    },
+  });
 
-  var _mrbTable = Vue.component("btcog-tabledata",{
-      template:'<div id="tblData">\
+  var _mrbTable = Vue.component("btcog-tabledata", {
+    template:
+      '<div id="tblData">\
                     <b-table :items="memberitems" :fields="membercolumns" foot-clone>\
-                      <template slot="HEAD_Date" slot-scope="data" >\
+                      <template v-slot:head(Date)="data" >\
                           <strong v-if="first">Transaction Date</strong>\
                       </template>\
-                      <template slot="HEAD_Type" slot-scope="data" >\
+                      <template v-slot:head(Type)="data" >\
                           <strong v-if="first">Transaction Type</strong>\
                       </template>\
-                      <template slot="HEAD_Amount" slot-scope="data">\
+                      <template v-slot:head(Amount)="data">\
                           <strong v-if="first">Amount</strong>\
                       </template>\
-                      <template slot="FOOT_Date" slot-scope="data">\
+                      <template v-slot:foot(Date)="data">\
                           <strong>Total for Month - {{month}} {{year}}</strong>\
                       </template>\
-                      <template slot="FOOT_Type" slot-scope="data">\
+                      <template v-slot:foot(Type)="data">\
+                        <span></span>\
                       </template>\
-                      <template slot="FOOT_Amount" slot-scope="data">\
+                      <template v-slot:foot(Amount)="data">\
                           <strong>{{monthTotal}}</strong>\
                       </template>\
                     </b-table>\
                 </div>',
-      props:["memberitems", "membercolumns", "first", "last"],
-      computed:{
-          month: function () {
-            var mn;
-            if (this.memberitems.length > 0)
-            {
-                mn = getMonthfromdte(this.memberitems[0].Date);
-                return store.getters.getMonths[mn];
-            }
-            return "";
-          },
-          monthTotal: function () {
-            var tot = 0;
-            this.memberitems.forEach(function (item) {
-              tot += item.Amount;
-            });
-            return accounting.formatMoney(tot);
-          },
-          year: function()
-          {
-              return store.getters.getSelectedYear;
-          }
-
+    props: ["memberitems", "membercolumns", "first", "last"],
+    computed: {
+      month: function () {
+        var mn;
+        if (this.memberitems.length > 0) {
+          mn = getMonthfromdte(this.memberitems[0].Date);
+          return store.getters.getMonths[mn];
+        }
+        return "";
       },
-      methods: {
-          formatdate: function (payload) {
-            return new Date(payload).toLocaleDateString();
-          },
-          getamount: function(payload){
-              return accounting.formatMoney(payload);
-          },
-
-      }
-  })
+      monthTotal: function () {
+        var tot = 0;
+        this.memberitems.forEach(function (item) {
+          tot += item.Amount;
+        });
+        return accounting.formatMoney(tot);
+      },
+      year: function () {
+        return store.getters.getSelectedYear;
+      },
+    },
+    methods: {
+      formatdate: function (payload) {
+        return new Date(payload).toLocaleDateString();
+      },
+      getamount: function (payload) {
+        return accounting.formatMoney(payload);
+      },
+    },
+  });
 
   var app = new Vue({
     el: "#app",
     mounted: function () {
-      axios.get(_spPageContextInfo.webServerRelativeUrl + "/_api/web/lists/getbytitle('Members')/items", {
-        headers: { "accept": "application/json;odata=verbose" }
-      })
+      axios
+        .get(
+          _spPageContextInfo.webServerRelativeUrl +
+            "/_api/web/lists/getbytitle('Members')/items",
+          {
+            headers: { accept: "application/json;odata=verbose" },
+          }
+        )
         .then(function (response) {
           var data = [];
           response.data.d.results.forEach(function (element) {
             data.push(element.Title);
           });
           data.sort();
-          store.commit('setMembers', data);
-        })
-    }
-  })
-
+          store.commit("setMembers", data);
+        });
+    },
+  });
 </script>
